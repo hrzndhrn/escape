@@ -173,6 +173,7 @@ defmodule EscapeTest do
   end
 
   defp format(ansidata, opts \\ []) do
+    opts = Keyword.put_new(opts, :emit, true)
     ansidata |> Escape.format(opts) |> IO.iodata_to_binary()
   end
 end
