@@ -161,7 +161,7 @@ defmodule EscapeTest do
   test "raises error for an unknown sequence" do
     message = "invalid sequence specification: :foo"
 
-    assert_raise ArgumentError, message, fn -> Escape.format([:foo, "hello"]) end
+    assert_raise ArgumentError, message, fn -> Escape.format([:foo, "hello"], emit: true) end
   end
 
   test "raises error for a cyclic sequence" do
