@@ -1,4 +1,4 @@
-Mix.install([{:escape, path: "."}])
+Mix.install([{:escape, "~> 0.1"}])
 
 per_line = 6
 
