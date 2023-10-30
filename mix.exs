@@ -3,7 +3,7 @@ defmodule Escape.MixProject do
 
   @version "0.1.0"
   @source_url "https://github.com/hrzndhrn/escape"
-  @description "ANSI escape tool"
+  @description "An ANSI escape tool"
 
   def project do
     [
