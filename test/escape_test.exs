@@ -6,7 +6,7 @@ defmodule EscapeTest do
 
   alias IO.ANSI
 
-  doctest Escape
+  if IO.ANSI.enabled?(), do: doctest(Escape)
 
   batch "format" do
     prove format("hello") == "hello"
@@ -99,21 +99,21 @@ defmodule EscapeTest do
   end
 
   batch "puts/2 with chardata" do
-    prove capture_io(fn -> Escape.puts("hello") end) == "hello\n"
-    prove capture_io(fn -> Escape.puts(:hello) end) == "hello\n"
-    prove capture_io(fn -> Escape.puts(["he", "llo"]) end) == "hello\n"
-    prove capture_io(fn -> Escape.puts(13) end) == "13\n"
-    prove capture_io(fn -> Escape.puts('hello') end) == "hello\n"
+    prove capture_io(fn -> Escape.puts("hello", emit: true) end) == "hello\n"
+    prove capture_io(fn -> Escape.puts(:hello, emit: true) end) == "hello\n"
+    prove capture_io(fn -> Escape.puts(["he", "llo"], emit: true) end) == "hello\n"
+    prove capture_io(fn -> Escape.puts(13, emit: true) end) == "13\n"
+    prove capture_io(fn -> Escape.puts('hello', emit: true) end) == "hello\n"
   end
 
   batch "puts/2 with sequence" do
-    prove capture_io(fn -> Escape.puts([:red, "hello"]) end) ==
+    prove capture_io(fn -> Escape.puts([:red, "hello"], emit: true) end) ==
             "#{ANSI.red()}hello#{ANSI.reset()}\n"
 
-    prove capture_io(fn -> Escape.puts([ANSI.color(55), "hello"]) end) ==
+    prove capture_io(fn -> Escape.puts([ANSI.color(55), "hello"], emit: true) end) ==
             "#{ANSI.color(55)}hello#{ANSI.reset()}\n"
 
-    prove capture_io(fn -> Escape.puts([ANSI.color_background(55), "hello"]) end) ==
+    prove capture_io(fn -> Escape.puts([ANSI.color_background(55), "hello"], emit: true) end) ==
             "#{ANSI.color_background(55)}hello#{ANSI.reset()}\n"
   end
 
@@ -129,15 +129,15 @@ defmodule EscapeTest do
   end
 
   batch "write/2 with sequence" do
-    prove capture_io(fn -> Escape.write("hello") end) == "hello"
+    prove capture_io(fn -> Escape.write("hello", emit: true) end) == "hello"
 
-    prove capture_io(fn -> Escape.write([:red, "hello"]) end) ==
+    prove capture_io(fn -> Escape.write([:red, "hello"], emit: true) end) ==
             "#{ANSI.red()}hello#{ANSI.reset()}"
 
-    prove capture_io(fn -> Escape.write([ANSI.color(55), "hello"]) end) ==
+    prove capture_io(fn -> Escape.write([ANSI.color(55), "hello"], emit: true) end) ==
             "#{ANSI.color(55)}hello#{ANSI.reset()}"
 
-    prove capture_io(fn -> Escape.write([ANSI.color_background(55), "hello"]) end) ==
+    prove capture_io(fn -> Escape.write([ANSI.color_background(55), "hello"], emit: true) end) ==
             "#{ANSI.color_background(55)}hello#{ANSI.reset()}"
   end
 
