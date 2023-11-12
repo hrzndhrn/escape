@@ -7,8 +7,6 @@ colors =
       g <- 0..5,
       b <- 0..5 do
     text = " #{r}/#{g}/#{b} "
-    # color = if r < 3 || g < 3 || b < 3, do: :white, else: :black
-    color = if (r < 3 && g < 3) || (g < 3 and b < 3), do: :white, else: :black
     color = if g < 3, do: :white, else: :black
     {text, %{color_background: IO.ANSI.color_background(r, g, b), color: color}}
   end
