@@ -26,3 +26,7 @@ end
 ## Examples
 
 ![Examples](examples.png)
+
+![RGB Palette](rgb_palette.png)
+
+![Code Palette](code_palette.png)
