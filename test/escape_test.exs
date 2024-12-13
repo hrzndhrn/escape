@@ -105,7 +105,7 @@ defmodule EscapeTest do
     prove capture_io(fn -> Escape.puts(:hello, emit: true) end) == "hello\n"
     prove capture_io(fn -> Escape.puts(["he", "llo"], emit: true) end) == "hello\n"
     prove capture_io(fn -> Escape.puts(13, emit: true) end) == "13\n"
-    prove capture_io(fn -> Escape.puts('hello', emit: true) end) == "hello\n"
+    prove capture_io(fn -> Escape.puts(~c"hello", emit: true) end) == "hello\n"
   end
 
   batch "puts/2 with sequence" do
