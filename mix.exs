@@ -50,8 +50,7 @@ defmodule Escape.MixProject do
 
   defp aliases do
     [
-      carp: "test --seed 0 --max-failures 1",
-      sweep: "recode --autocorrect --task IOInspect --task Dbg"
+      carp: "test --seed 0 --max-failures 1"
     ]
   end
 
@@ -59,8 +58,7 @@ defmodule Escape.MixProject do
     [
       {:ex_doc, "~> 0.25", only: :dev, runtime: false},
       {:excoveralls, "~> 0.18", only: :test, runtime: false},
-      {:prove, "~> 0.1", only: [:test, :dev]},
-      {:recode, "~> 0.6", only: :dev}
+      {:prove, "~> 0.1", only: [:test, :dev]}
     ]
   end
 

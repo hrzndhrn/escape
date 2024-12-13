@@ -12,7 +12,7 @@ defmodule EscapeTest do
     prove format("hello") == "hello"
     prove format(["hello"]) == "hello"
     prove format(["he", "llo"]) == "hello"
-    prove format(['he', 'llo']) == "hello"
+    prove format([~c"he", ~c"llo"]) == "hello"
     prove format(77) == "M"
 
     prove format([:green, "hello"]) ==
@@ -58,6 +58,8 @@ defmodule EscapeTest do
   end
 
   batch "format with theme" do
+    prove format("hello", theme: %{}) == "hello"
+
     prove format([:orange, "hello"], theme: %{orange: ANSI.color(214)}) ==
             "#{ANSI.color(214)}hello#{ANSI.reset()}"
 
@@ -149,6 +151,19 @@ defmodule EscapeTest do
             "hello"
   end
 
+  batch "format_doc/2" do
+    prove color_doc("hello", :ok) == "hello"
+
+    prove color_doc("hello", :ok, theme: %{ok: :green}) ==
+            {:doc_cons, {:doc_color, "hello", "\e[32m"}, {:doc_color, :doc_nil, "\e[0m"}}
+
+    prove color_doc("hello", :ok, theme: %{ok: :green, reset: :red}) ==
+            {:doc_cons, {:doc_color, "hello", "\e[32m"}, {:doc_color, :doc_nil, "\e[31m"}}
+
+    prove "hello" |> color_doc(:ok, theme: %{ok: :green, reset: :red}) |> render_doc() ==
+            "\e[32mhello\e[31m"
+  end
+
   prove "default_color", Escape.sequence(:default_color) == ANSI.default_color()
   prove "default_background", Escape.sequence(:default_background) == ANSI.default_background()
 
@@ -176,4 +191,11 @@ defmodule EscapeTest do
     opts = Keyword.put_new(opts, :emit, true)
     ansidata |> Escape.format(opts) |> IO.iodata_to_binary()
   end
+
+  defp color_doc(doc, ansicode, opts \\ []) do
+    opts = Keyword.put_new(opts, :emit, true)
+    Escape.color_doc(doc, ansicode, opts)
+  end
+
+  defp render_doc(doc), do: doc |> Inspect.Algebra.format(80) |> IO.iodata_to_binary()
 end

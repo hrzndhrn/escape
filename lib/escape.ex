@@ -27,7 +27,7 @@ defmodule Escape do
       ...> })
       [[[[] | "\e[38;5;178m"], "hello"] | "\e[0m"]
 
-  The theme can also contain further fromats.
+  The theme can also contain further formats.
 
       iex> theme = %{
       ...>   orange: IO.ANSI.color(5, 3, 0),
@@ -44,6 +44,10 @@ defmodule Escape do
   """
 
   import Escape.Sequence
+  import Inspect.Algebra, only: [is_doc: 1]
+
+  alias Inspect.Algebra
+  alias IO.ANSI
 
   @type ansicode :: atom
   @type ansidata :: ansilist | ansicode | binary
@@ -113,10 +117,27 @@ defmodule Escape do
         {:home, "", "H"}
       ]
 
-  @sequences Enum.map(sequences, &elem(&1, 0))
+  @sequences sequences |> Enum.map(fn seq -> elem(seq, 0) end) |> Enum.sort()
 
   @doc """
   Returns a list of all available named ANSI sequences.
+
+  ## Examples
+
+      iex> Escape.sequences()
+      [:black, :black_background, :blink_off, :blink_rapid, :blink_slow, :blue,
+      :blue_background, :bright, :conceal, :crossed_out, :cyan, :cyan_background,
+      :default_background, :default_color, :encircled, :faint, :font_1, :font_2,
+      :font_3, :font_4, :font_5, :font_6, :font_7, :font_8, :font_9, :framed, :green,
+      :green_background, :home, :inverse, :inverse_off, :italic, :light_black,
+      :light_black_background, :light_blue, :light_blue_background, :light_cyan,
+      :light_cyan_background, :light_green, :light_green_background, :light_magenta,
+      :light_magenta_background, :light_red, :light_red_background, :light_white,
+      :light_white_background, :light_yellow, :light_yellow_background, :magenta,
+      :magenta_background, :no_underline, :normal, :not_framed_encircled,
+      :not_italic, :not_overlined, :overlined, :primary_font, :red, :red_background,
+      :reset, :reverse, :reverse_off, :underline, :white, :white_background, :yellow,
+      :yellow_background]
   """
   @spec sequences :: [ansicode]
   def sequences, do: @sequences
@@ -238,12 +259,14 @@ defmodule Escape do
 
   ## Options
 
-    * `:theme` a map that adds ANSI codes usable in the Chardata-like argument.
-               The searching in the theme performs a deep search.
+    * `:theme` a map that adds ANSI codes usable in the chardata-like argument.
+      The searching in the theme performs a deep search.
 
-    * `:reset` append an `IO.ANSI.reset/0` when true.
+    * `:reset` appends an `IO.ANSI.reset/0` when true. 
+      Defaults to `true`.
 
-    * `:emit` enables or disables emitting ANSI codes.
+    * `:emit` enables or disables emitting ANSI codes. 
+      Defaults to `IO.ANSI.enabled?/0`.
 
   ## Examples
 
@@ -264,9 +287,9 @@ defmodule Escape do
       iex> Escape.format([:info, "info"], theme: theme, emit: false)
       [[], "info"]
   """
-  @spec format(ansidata, keyword) :: IO.chardata()
-  def format(ansidata, opts \\ [emit: IO.ANSI.enabled?(), reset: true]) do
-    emit? = Keyword.get(opts, :emit, IO.ANSI.enabled?())
+  @spec format(ansidata(), keyword()) :: IO.chardata()
+  def format(ansidata, opts \\ [emit: ANSI.enabled?(), reset: true]) do
+    emit? = Keyword.get(opts, :emit, ANSI.enabled?())
     reset = Keyword.get(opts, :reset, if(emit?, do: :maybe, else: false))
     theme = Keyword.get(opts, :theme)
 
@@ -335,4 +358,37 @@ defmodule Escape do
 
   defp sequence?(<<"\e[", _rest::binary>>), do: true
   defp sequence?(_term), do: false
+
+  defmacrop doc_color(doc, color) do
+    quote do: {:doc_color, unquote(doc), unquote(color)}
+  end
+
+  @doc """
+  Colors a `Inspect.Algebra` document if the `color_key` has a color in the 
+  `theme`.
+
+  This function is similar to `Inspect.Algebra.color/3` but has a different 
+  options argument.
+
+  ## Options
+
+    * `:theme` a map of ANSI codes. The searching in the theme performs a deep 
+      search.
+
+    * `:emit` enables or disables emitting ANSI codes. 
+      Defaults to `IO.ANSI.enabled?/0`.
+  """
+  @spec color_doc(Algebra.t(), ansicode(), keyword()) :: Algebra.t()
+  def color_doc(doc, color_key, opts \\ []) when is_doc(doc) do
+    emit? = Keyword.get(opts, :emit, ANSI.enabled?())
+    theme = Keyword.get(opts, :theme)
+
+    if emit? && theme && Map.has_key?(theme, color_key) do
+      precolor = format_sequence(color_key, theme, [])
+      postcolor = format_sequence(:reset, theme, [])
+      Algebra.concat(doc_color(doc, precolor), doc_color(:doc_nil, postcolor))
+    else
+      doc
+    end
+  end
 end
