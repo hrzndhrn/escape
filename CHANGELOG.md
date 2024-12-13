@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.1 - 2024/12/13
+## 0.2.0 - 2024/12/13
 
 + Add function `Escape.color_doc/2`.
 
