@@ -18,6 +18,7 @@ defmodule Escape.MixProject do
       docs: docs(),
       aliases: aliases(),
       deps: deps(),
+      dialyzer: dialyzer(),
       package: package()
     ]
   end
@@ -48,6 +49,13 @@ defmodule Escape.MixProject do
     ]
   end
 
+  defp dialyzer do
+    [
+      plt_file: {:no_warn, "test/support/plts/dialyzer.plt"},
+      flags: [:unmatched_returns, :no_improper_lists]
+    ]
+  end
+
   defp aliases do
     [
       carp: "test --seed 0 --max-failures 1"
@@ -56,6 +64,8 @@ defmodule Escape.MixProject do
 
   defp deps do
     [
+      # dev/test
+      {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.25", only: :dev, runtime: false},
       {:excoveralls, "~> 0.18", only: :test, runtime: false},
       {:prove, "~> 0.1", only: [:test, :dev]}
