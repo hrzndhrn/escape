@@ -45,6 +45,7 @@ defmodule Escape do
 
   import Escape.Sequence
   import Inspect.Algebra, only: [is_doc: 1]
+  import Kernel, except: [length: 1]
 
   alias Inspect.Algebra
   alias IO.ANSI
@@ -262,10 +263,10 @@ defmodule Escape do
     * `:theme` a map that adds ANSI codes usable in the chardata-like argument.
       The searching in the theme performs a deep search.
 
-    * `:reset` appends an `IO.ANSI.reset/0` when true. 
+    * `:reset` appends an `IO.ANSI.reset/0` when true.
       Defaults to `true`.
 
-    * `:emit` enables or disables emitting ANSI codes. 
+    * `:emit` enables or disables emitting ANSI codes.
       Defaults to `IO.ANSI.enabled?/0`.
 
   ## Examples
@@ -364,18 +365,18 @@ defmodule Escape do
   end
 
   @doc """
-  Colors a `Inspect.Algebra` document if the `color_key` has a color in the 
+  Colors a `Inspect.Algebra` document if the `color_key` has a color in the
   `theme`.
 
-  This function is similar to `Inspect.Algebra.color/3` but has a different 
+  This function is similar to `Inspect.Algebra.color/3` but has a different
   options argument.
 
   ## Options
 
-    * `:theme` a map of ANSI codes. The searching in the theme performs a deep 
+    * `:theme` a map of ANSI codes. The searching in the theme performs a deep
       search.
 
-    * `:emit` enables or disables emitting ANSI codes. 
+    * `:emit` enables or disables emitting ANSI codes.
       Defaults to `IO.ANSI.enabled?/0`.
   """
   @spec color_doc(Algebra.t(), ansicode(), keyword()) :: Algebra.t()
@@ -390,5 +391,37 @@ defmodule Escape do
     else
       doc
     end
+  end
+
+  @doc """
+  Returns the length of a string or ansidata without ANSI escape sequences.
+
+  ## Examples
+
+      iex> String.length("Hello, world!")
+      13
+      iex> [:green, "Hello", :reset, ", ", :blue, "world!"]
+      ...> |> Escape.format()
+      ...> |> Escape.length()
+      13
+      iex> [:green, "Hello", :reset, ", ", :blue, "world!"]
+      ...> |> Escape.format()
+      ...> |> IO.iodata_to_binary()
+      ...> |> Escape.length()
+      13
+  """
+  @spec length(String.t() | ansidata()) :: non_neg_integer
+  def length(string_or_ansidata)
+
+  def length(string) when is_binary(string) do
+    string
+    |> String.replace(~r/\e\[[0-9;]*m/, "")
+    |> String.length()
+  end
+
+  def length(ansidata) do
+    ansidata
+    |> IO.iodata_to_binary()
+    |> length()
   end
 end

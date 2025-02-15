@@ -8,7 +8,7 @@ defmodule Escape.MixProject do
   def project do
     [
       app: :escape,
-      version: "0.2.0",
+      version: "0.3.0",
       elixir: "~> 1.11",
       source_url: @source_url,
       description: @description,
