@@ -212,7 +212,7 @@ defmodule EscapeTest do
     test "splits a string with sequences" do
       string =
         [:red, "red", :green, "green"]
-        |> Escape.format(reset: false)
+        |> Escape.format(reset: false, emit: true)
         |> IO.iodata_to_binary()
 
       assert Escape.split_at(string, 2) == {"\e[31mre", "d\e[32mgreen"}
@@ -230,7 +230,7 @@ defmodule EscapeTest do
     test "splits a string with sequences and sequence at the end" do
       string =
         [:red, "red", :green, "green"]
-        |> Escape.format()
+        |> Escape.format(emit: true)
         |> IO.iodata_to_binary()
 
       assert Escape.split_at(string, 2) == {"\e[31mre", "d\e[32mgreen\e[0m"}
@@ -248,10 +248,10 @@ defmodule EscapeTest do
       end
     end
 
-    test "splits a string with several sequences one ater the other" do
+    test "splits a string with several sequences one after the other" do
       string =
         [:red, "red", :green, :reverse, "green"]
-        |> Escape.format(reset: false)
+        |> Escape.format(reset: false, emit: true)
         |> IO.iodata_to_binary()
 
       assert Escape.split_at(string, 2) == {"\e[31mre", "d\e[32m\e[7mgreen"}
