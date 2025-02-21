@@ -8,7 +8,7 @@ defmodule Escape.MixProject do
   def project do
     [
       app: :escape,
-      version: "0.3.0",
+      version: "0.4.0",
       elixir: "~> 1.11",
       source_url: @source_url,
       description: @description,
@@ -65,7 +65,7 @@ defmodule Escape.MixProject do
   defp deps do
     [
       # dev/test
-      {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
+      {:dialyxir, "~> 1.4", only: :dev, runtime: false},
       {:ex_doc, "~> 0.25", only: :dev, runtime: false},
       {:excoveralls, "~> 0.18", only: :test, runtime: false},
       {:prove, "~> 0.1", only: [:test, :dev]}

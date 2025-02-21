@@ -58,6 +58,8 @@ defmodule Escape do
             binary | ansicode | []
           )
 
+  @sequence_regex ~r/\x1B\[[0-9;]*m/
+
   named_colors = [
     :black,
     :red,
@@ -414,14 +416,72 @@ defmodule Escape do
   def length(string_or_ansidata)
 
   def length(string) when is_binary(string) do
-    string
-    |> String.replace(~r/\e\[[0-9;]*m/, "")
-    |> String.length()
+    string |> strip_sequences() |> String.length()
   end
 
   def length(ansidata) do
-    ansidata
-    |> IO.iodata_to_binary()
-    |> length()
+    ansidata |> IO.iodata_to_binary() |> length()
+  end
+
+  @doc ~S"""
+  Returns the given `string` stripped of all escape sequences.
+
+  ## Examples
+
+      iex> [:green, "Hello, ", :green, "world!"]
+      ...> |> Escape.format(reset: false)
+      ...> |> IO.iodata_to_binary()
+      ...> |> Escape.strip_sequences()
+      "Hello, world!"
+
+  """
+  @spec strip_sequences(String.t()) :: String.t()
+  def strip_sequences(string) when is_binary(string) do
+    String.replace(string, @sequence_regex, "")
+  end
+
+  @doc ~S"""
+  Splits a string into two parts at the specified offset, respecting ANSI escape
+  sequences.
+
+  ## Examples
+
+      iex> string = [:red, "red", :green, "green"]
+      ...>   |> Escape.format(reset: false)
+      ...>   |> IO.iodata_to_binary()
+      iex> Escape.split_at(string, 3)
+      {"\e[31mred", "\e[32mgreen"}
+      iex> Escape.split_at(string, 1)
+      {"\e[31mr", "ed\e[32mgreen"}
+  """
+  @spec split_at(String.t(), non_neg_integer()) :: {String.t(), String.t()}
+  def split_at(string, 0), do: {"", string}
+  def split_at("", _position), do: {"", ""}
+
+  def split_at(string, position) when is_binary(string) and position > 0 do
+    string
+    |> String.split(@sequence_regex, include_captures: true)
+    |> do_split_at(position, [])
+  end
+
+  defp do_split_at([string], position, []), do: String.split_at(string, position)
+
+  defp do_split_at([string], position, acc) do
+    {left, right} = String.split_at(string, position)
+    {IO.iodata_to_binary([acc, left]), right}
+  end
+
+  defp do_split_at([string, sequence | rest], position, acc) do
+    case String.length(string) do
+      length when length < position ->
+        do_split_at(rest, position - length, [acc | [string, sequence]])
+
+      length when length > position ->
+        {left, right} = String.split_at(string, position)
+        {IO.iodata_to_binary([acc, left]), IO.iodata_to_binary([right, sequence, rest])}
+
+      _length ->
+        {IO.iodata_to_binary([acc, string]), IO.iodata_to_binary([sequence, rest])}
+    end
   end
 end
