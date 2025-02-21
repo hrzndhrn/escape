@@ -100,6 +100,14 @@ defmodule EscapeTest do
     prove format([:blank, "hello", :blank], theme: %{blank: ""}, emit: false) == "hello"
   end
 
+  batch "format overwrites known sequences" do
+    prove format([:reset], theme: %{reset: :white}, reset: false) ==
+            format([:white], reset: false)
+
+    prove format([:green, :red], theme: %{green: :white, red: :white}, reset: false) ==
+            format([:white, :white], reset: false)
+  end
+
   batch "puts/2 with chardata" do
     prove capture_io(fn -> Escape.puts("hello", emit: true) end) == "hello\n"
     prove capture_io(fn -> Escape.puts(:hello, emit: true) end) == "hello\n"
@@ -173,17 +181,106 @@ defmodule EscapeTest do
     end
   end
 
-  test "raises error for an unknown sequence" do
-    message = "invalid sequence specification: :foo"
+  describe "format/2" do
+    test "raises error for an unknown sequence" do
+      message = "invalid sequence specification: :foo"
 
-    assert_raise ArgumentError, message, fn -> Escape.format([:foo, "hello"], emit: true) end
+      assert_raise ArgumentError, message, fn -> Escape.format([:foo, "hello"], emit: true) end
+    end
+
+    test "raises error for a cyclic sequence" do
+      message = "cyclic sequence specification: :foo"
+
+      assert_raise ArgumentError, message, fn ->
+        format([:foo, "bar"], theme: %{foo: :bar, bar: :foo})
+      end
+    end
   end
 
-  test "raises error for a cyclic sequence" do
-    message = "cyclic sequence specification: :foo"
+  describe "split_at/2" do
+    prove Escape.split_at("foobar", 3) == String.split_at("foobar", 3)
+    prove Escape.split_at("foo", 0) == {"", "foo"}
+    prove Escape.split_at("foo", 0) == {"", "foo"}
+    prove Escape.split_at("foo", 10) == {"foo", ""}
+    prove Escape.split_at("", 10) == {"", ""}
+    prove Escape.split_at("\e[0m", 0) == {"", "\e[0m"}
+    prove Escape.split_at("\e[0m", 1) == {"\e[0m", ""}
+    prove Escape.split_at("a\e[0m", 0) == {"", "a\e[0m"}
+    prove Escape.split_at("a\e[0m", 1) == {"a", "\e[0m"}
+    prove Escape.split_at("a\e[0m", 2) == {"a\e[0m", ""}
 
-    assert_raise ArgumentError, message, fn ->
-      format([:foo, "bar"], theme: %{foo: :bar, bar: :foo})
+    test "splits a string with sequences" do
+      string =
+        [:red, "red", :green, "green"]
+        |> Escape.format(reset: false, emit: true)
+        |> IO.iodata_to_binary()
+
+      assert Escape.split_at(string, 2) == {"\e[31mre", "d\e[32mgreen"}
+      assert Escape.split_at(string, 3) == {"\e[31mred", "\e[32mgreen"}
+      assert Escape.split_at(string, 4) == {"\e[31mred\e[32mg", "reen"}
+
+      length = Escape.length(string) + 1
+
+      for at <- 0..length do
+        assert {left, right} = Escape.split_at(string, at), "split fails at #{at}"
+        assert left <> right == string, "split fails at #{at}: #{inspect(left <> right)}"
+      end
+    end
+
+    test "splits a string with sequences and sequence at the end" do
+      string =
+        [:red, "red", :green, "green"]
+        |> Escape.format(emit: true)
+        |> IO.iodata_to_binary()
+
+      assert Escape.split_at(string, 2) == {"\e[31mre", "d\e[32mgreen\e[0m"}
+      assert Escape.split_at(string, 3) == {"\e[31mred", "\e[32mgreen\e[0m"}
+      assert Escape.split_at(string, 4) == {"\e[31mred\e[32mg", "reen\e[0m"}
+      assert Escape.split_at(string, 7) == {"\e[31mred\e[32mgree", "n\e[0m"}
+      assert Escape.split_at(string, 8) == {"\e[31mred\e[32mgreen", "\e[0m"}
+      assert Escape.split_at(string, 9) == {"\e[31mred\e[32mgreen\e[0m", ""}
+
+      length = Escape.length(string) + 1
+
+      for at <- 0..length do
+        assert {left, right} = Escape.split_at(string, at), "split fails at #{at}"
+        assert left <> right == string, "split fails at #{at}: #{inspect(left <> right)}"
+      end
+    end
+
+    test "splits a string with several sequences one after the other" do
+      string =
+        [:red, "red", :green, :reverse, "green"]
+        |> Escape.format(reset: false, emit: true)
+        |> IO.iodata_to_binary()
+
+      assert Escape.split_at(string, 2) == {"\e[31mre", "d\e[32m\e[7mgreen"}
+      assert Escape.split_at(string, 3) == {"\e[31mred", "\e[32m\e[7mgreen"}
+      assert Escape.split_at(string, 4) == {"\e[31mred\e[32m\e[7mg", "reen"}
+
+      length = Escape.length(string) + 1
+
+      for at <- 0..length do
+        assert {left, right} = Escape.split_at(string, at), "split fails at #{at}"
+        assert left <> right == string, "split fails at #{at}: #{inspect(left <> right)}"
+      end
+    end
+
+    test "with long string" do
+      string =
+        [:red, "red", :green, :reverse, "green", :blue, "blue"]
+        |> List.duplicate(100)
+        |> Escape.format(reset: false)
+        |> IO.iodata_to_binary()
+
+      length = Escape.length(string) + 1
+
+      # assert Escape.split_at(string, 1000) == {"", ""}
+
+      for at <- 0..length do
+        assert {left, right} = Escape.split_at(string, at), "split fails at #{at}"
+        assert left <> right == string, "split fails at #{at}: #{inspect(left <> right)}"
+      end
     end
   end
 
