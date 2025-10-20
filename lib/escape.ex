@@ -122,7 +122,11 @@ defmodule Escape do
 
   @sequences sequences |> Enum.map(fn seq -> elem(seq, 0) end) |> Enum.sort()
 
-  @doc_nil []
+  if Version.match?(System.version(), ">= 1.19.0") do
+    @doc_nil []
+  else
+    @doc_nil :doc_nil
+  end
 
   @doc """
   Returns a list of all available named ANSI sequences.
