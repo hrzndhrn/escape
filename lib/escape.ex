@@ -221,6 +221,8 @@ defmodule Escape do
       iex> colorizer = Escape.colorizer(theme: %{say: :green})
       iex> colorizer.("hello", :say)
       [[[[] | "\e[32m"], "hello"] | "\e[0m"]
+      iex> colorizer.("hello", :green)
+      [[[[] | "\e[32m"], "hello"] | "\e[0m"]
   """
   @spec colorizer(keyword) :: (String.t(), ansicode -> String.t())
   def colorizer(opts) do
