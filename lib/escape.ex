@@ -122,6 +122,8 @@ defmodule Escape do
 
   @sequences sequences |> Enum.map(fn seq -> elem(seq, 0) end) |> Enum.sort()
 
+  @doc_nil []
+
   @doc """
   Returns a list of all available named ANSI sequences.
 
@@ -391,11 +393,13 @@ defmodule Escape do
     if emit? && theme && Map.has_key?(theme, color_key) do
       precolor = format_sequence(color_key, theme, [])
       postcolor = format_sequence(:reset, theme, [])
-      Algebra.concat(doc_color(doc, precolor), doc_color(:doc_nil, postcolor))
+      Algebra.concat(doc_color(doc, precolor), doc_color(@doc_nil, postcolor))
     else
       doc
     end
   end
+
+  # Algebra.concat(doc_color(doc, precolor), doc_color("", postcolor))
 
   @doc """
   Returns the length of a string or ansidata without ANSI escape sequences.
