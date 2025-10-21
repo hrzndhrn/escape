@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1 - 2025/10/21
+
++ Fix `color_doc` for Elixir 1.19
+
 ## 0.4.0 - 2025/02/21
 
 + Add function `Escape.split_at/2`.
