@@ -122,6 +122,12 @@ defmodule Escape do
 
   @sequences sequences |> Enum.map(fn seq -> elem(seq, 0) end) |> Enum.sort()
 
+  if Version.match?(System.version(), ">= 1.19.0") do
+    @doc_nil []
+  else
+    @doc_nil :doc_nil
+  end
+
   @doc """
   Returns a list of all available named ANSI sequences.
 
@@ -220,6 +226,8 @@ defmodule Escape do
 
       iex> colorizer = Escape.colorizer(theme: %{say: :green})
       iex> colorizer.("hello", :say)
+      [[[[] | "\e[32m"], "hello"] | "\e[0m"]
+      iex> colorizer.("hello", :green)
       [[[[] | "\e[32m"], "hello"] | "\e[0m"]
   """
   @spec colorizer(keyword) :: (String.t(), ansicode -> String.t())
@@ -389,11 +397,13 @@ defmodule Escape do
     if emit? && theme && Map.has_key?(theme, color_key) do
       precolor = format_sequence(color_key, theme, [])
       postcolor = format_sequence(:reset, theme, [])
-      Algebra.concat(doc_color(doc, precolor), doc_color(:doc_nil, postcolor))
+      Algebra.concat(doc_color(doc, precolor), doc_color(@doc_nil, postcolor))
     else
       doc
     end
   end
+
+  # Algebra.concat(doc_color(doc, precolor), doc_color("", postcolor))
 
   @doc """
   Returns the length of a string or ansidata without ANSI escape sequences.

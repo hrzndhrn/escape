@@ -159,14 +159,11 @@ defmodule EscapeTest do
             "hello"
   end
 
-  batch "format_doc/2" do
+  batch "color_doc/2" do
     prove color_doc("hello", :ok) == "hello"
 
-    prove color_doc("hello", :ok, theme: %{ok: :green}) ==
-            {:doc_cons, {:doc_color, "hello", "\e[32m"}, {:doc_color, :doc_nil, "\e[0m"}}
-
-    prove color_doc("hello", :ok, theme: %{ok: :green, reset: :red}) ==
-            {:doc_cons, {:doc_color, "hello", "\e[32m"}, {:doc_color, :doc_nil, "\e[31m"}}
+    prove "hello" |> color_doc(:ok, theme: %{ok: :green}) |> render_doc ==
+            "\e[32mhello\e[0m"
 
     prove "hello" |> color_doc(:ok, theme: %{ok: :green, reset: :red}) |> render_doc() ==
             "\e[32mhello\e[31m"

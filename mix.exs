@@ -1,25 +1,30 @@
 defmodule Escape.MixProject do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "0.4.1"
   @source_url "https://github.com/hrzndhrn/escape"
   @description "An ANSI escape tool"
 
   def project do
     [
       app: :escape,
-      version: "0.4.0",
+      version: @version,
       elixir: "~> 1.11",
       source_url: @source_url,
       description: @description,
       start_permanent: Mix.env() == :prod,
       test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: preferred_cli_env(),
       docs: docs(),
       aliases: aliases(),
       deps: deps(),
       dialyzer: dialyzer(),
       package: package()
+    ]
+  end
+
+  def cli do
+    [
+      preferred_envs: preferred_cli_env()
     ]
   end
 
