@@ -162,7 +162,7 @@ defmodule EscapeTest do
   batch "color_doc/2" do
     prove color_doc("hello", :ok) == "hello"
 
-    prove "hello" |> color_doc( :ok, theme: %{ok: :green}) |> render_doc ==
+    prove "hello" |> color_doc(:ok, theme: %{ok: :green}) |> render_doc ==
             "\e[32mhello\e[0m"
 
     prove "hello" |> color_doc(:ok, theme: %{ok: :green, reset: :red}) |> render_doc() ==
