@@ -22,27 +22,23 @@ defmodule Escape.MixProject do
     ]
   end
 
-  def cli do
-    [
-      preferred_envs: preferred_cli_env()
-    ]
-  end
-
   def application do
     [
       extra_applications: [:logger]
     ]
   end
 
-  defp preferred_cli_env do
+  def cli do
     [
-      carp: :test,
-      sweep: :dev,
-      coveralls: :test,
-      "coveralls.detail": :test,
-      "coveralls.post": :test,
-      "coveralls.html": :test,
-      "coveralls.github": :test
+      preferred_envs: [
+        carp: :test,
+        sweep: :dev,
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test,
+        "coveralls.github": :test
+      ]
     ]
   end
 
